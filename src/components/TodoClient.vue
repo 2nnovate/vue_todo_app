@@ -32,7 +32,7 @@ export default {
           todo: '빨래하기',
         },
         {
-          todo: '설거지하기',
+          todo: '설거지하기3',
         },
         {
           todo: '청소하기',
