@@ -61,13 +61,20 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['deleteTodo']),
+    ...mapActions(['deleteTodo', 'editTodo']),
     changeEditMode(item) {
       this.editTargetID = item.todoID;
       this.editContent = item.todo;
     },
     editConfirm() {
-      console.log('[this.editContent]', this.editContent);
+      if (!this.editTargetID) return;
+      const editInfo = {
+        todoID: this.editTargetID,
+        todo: this.editContent,
+      };
+      this.editTodo(editInfo);
+      this.editTargetID = null;
+      this.editContent = null;
     },
   },
   mounted() {},

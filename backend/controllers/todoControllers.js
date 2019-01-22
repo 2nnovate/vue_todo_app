@@ -29,6 +29,20 @@ controller.createItem = asyncWrap(async (req, res) => {
   }
 });
 
+controller.editItem = asyncWrap(async (req, res) => {
+  const { todoID, todo } = req.body;
+  if (!todoID || !todo) throw new Error('할 일을 수정 할 수 없습니다.');
+  try {
+    const targetTodo = await Todos.findById(todoID);
+    // TODO: todoID 는 들어왔지만 DB에 없는 경우 익셉션
+    targetTodo.todo = todo;
+    await targetTodo.save();
+    res.send(targetTodo);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 controller.deleteItem = asyncWrap(async (req, res) => {
   const { todoID } = req.body;
   if (!todoID) throw new Error('해당 할 일을 삭제할 수 없습니다.');

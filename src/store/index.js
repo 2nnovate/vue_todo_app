@@ -26,10 +26,13 @@ export default new Vuex.Store({
     addNewTodo(state, { item }) {
       state.todos.push(item);
     },
-    // deleteTodo(state, { todoID }) {
-    //   const newTodos = state.todos.filter(todo => todo.todoID !== todoID);
-    //   state.todos = newTodos;
-    // },
+    patchTodo(state, { item }) {
+      const updateTodos = state.todos.map((todo) => {
+        if (todo.todoID !== item.todoID) return todo;
+        return item;
+      });
+      state.todos = updateTodos;
+    },
     deleteAll(state) {
       state.todos = [];
     },
@@ -49,6 +52,12 @@ export default new Vuex.Store({
       const response = await axios.post('/v1/todo/item', bodyObject);
       if (response.status === 200) {
         commit('addNewTodo', { item: response.data });
+      }
+    },
+    async editTodo({ commit }, editInfo) {
+      const response = await axios.patch('/v1/todo/item/', editInfo);
+      if (response.status === 200) {
+        commit('patchTodo', { item: response.data });
       }
     },
     async deleteTodo({ commit }, todoID) {
