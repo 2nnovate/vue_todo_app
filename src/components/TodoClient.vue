@@ -20,7 +20,7 @@
         v-model="todoInput"
         clearable
         class="margin-bottom"
-        ref=""
+        v-focus
         @keyup.enter.native="addTodoClient"
       >
         <el-button

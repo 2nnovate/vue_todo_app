@@ -30,6 +30,7 @@
           v-model="editContent"
           clearable
           class="margin-bottom"
+          v-focus
           @keyup.enter.native="editConfirm"
         >
           <el-button

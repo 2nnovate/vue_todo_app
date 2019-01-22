@@ -11,10 +11,10 @@ Vue.use(ElementUI);
 Vue.config.productionTip = false;
 
 // 사용자 정의 디렉티브 (v-focus 어트리뷰트로 사용가능)
-// FIXME: element ui 는 하위에 실제 인풋박스를 만들기 때문에 워킹하지 않는다.
 Vue.directive('focus', {
   inserted(el) {
-    el.focus();
+    // childNodes: DOM 애서 자식 노드를 선택할 수 있다.
+    el.childNodes[1].focus();
   },
 });
 
