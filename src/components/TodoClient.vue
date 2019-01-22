@@ -2,22 +2,51 @@
   <section>
     <header>
       Todo List
+      <el-dropdown class="float-right header-icon">
+        <span class="el-dropdown-link">
+          <i class="el-icon-more"></i>
+        </span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item
+            @click.native="deleteDialogVisible = true">
+            전체 삭제
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
     </header>
     <article>
       <el-input
-        placeholder="Please input"
+        placeholder="할 일을 입력해주세요"
         v-model="todoInput"
         clearable
         class="margin-bottom"
+        ref=""
+        @keyup.enter.native="addTodoClient"
       >
-        <el-button slot="append">add</el-button>
+        <el-button
+          slot="append"
+          @click.native="addTodoClient"
+        >add</el-button>
       </el-input>
       <todo-list :todoList="todoList"></todo-list>
     </article>
+    <el-dialog
+      title="Warnings"
+      :visible.sync="deleteDialogVisible"
+      width="30%"
+      :before-close="handleDeleteDialogClose">
+      <h2>정말로 모든 할 일을 삭제하시겠습니까?</h2>
+      <p class="warn-message">삭제된 데이터는 복구되지 않습니다.</p>
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="handleDeleteDialogClose">취소</el-button>
+    <el-button type="primary" @click="handelDeleteAll">확인</el-button>
+  </span>
+    </el-dialog>
   </section>
 </template>
 
 <script>
+import { mapActions, mapState } from 'vuex';
 import TodoList from './TodoList';
 
 export default {
@@ -26,32 +55,48 @@ export default {
   data() {
     return {
       todoInput: '',
-      selectedList: '',
-      todoList: [
-        {
-          todo: '빨래하기',
-        },
-        {
-          todo: '설거지하기3',
-        },
-        {
-          todo: '청소하기',
-        },
-        {
-          todo: '운동하기',
-        },
-        {
-          todo: '낮잠자기',
-        },
-      ],
+      deleteDialogVisible: false,
     };
   },
+  computed: {
+    ...mapState({
+      todoList: state => state.todos,
+    }),
+  },
+  methods: {
+    ...mapActions(['fetchTodos', 'addTodo', 'deleteAll']),
+    addTodoClient() {
+      if (!this.todoInput) return;
+      this.addTodo(this.todoInput);
+      this.todoInput = '';
+    },
+    handleDeleteDialogClose() {
+      this.deleteDialogVisible = false;
+    },
+    handelDeleteAll() {
+      this.deleteAll();
+      this.deleteDialogVisible = false;
+    },
+  },
   mounted() {
-    console.log('Component mounted!');
-    console.log('[this.todoList]', this.todoList);
+    this.fetchTodos();
   },
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+  .header-icon {
+    font-size: 2rem;
+    top: -50%;
+    transform: translateY(35%);
+  }
+  .warn-message {
+    color: red;
+    font-weight: bold;
+  }
+  .el-input{
+    &__inner {
+      padding: 30px 14px;
+    }
+  }
 </style>
