@@ -2,6 +2,9 @@
 node_modules/
 package-lock.json
 static/.gitkeep
+backend/node_modules/
+backend/package-lock.json
+backend/public/static/
 /dist/
 npm-debug.log*
 yarn-debug.log*
