@@ -1,5 +1,6 @@
 const asyncWrap = require('../lib/asyncMiddleware');
 const models = require('../models');
+const HttpCodeException = require('../lib/httpcode-exception');
 
 const controller = {};
 const { todos: Todos } = models;
@@ -15,12 +16,13 @@ controller.getAllTodos = asyncWrap(async (req, res) => {
     res.send(allTodos);
   } catch (error) {
     console.error(error);
+    throw new HttpCodeException(404, 'E404', '할 일 목록을 가져올 수 업습니다.');
   }
 });
 
 controller.createItem = asyncWrap(async (req, res) => {
   const { todo, authorID, priority } = req.body;
-  if (!todo || !authorID || !priority) throw new Error('할 일을 생성 할 수 없습니다.');
+  if (!todo || !authorID || !priority) throw new HttpCodeException(400, 'E400', '할 일을 생성 할 수 없습니다.');
   try {
     const newItem = await Todos.create({ todo, authorID, priority });
     res.send(newItem);
@@ -29,7 +31,7 @@ controller.createItem = asyncWrap(async (req, res) => {
   }
 });
 
-controller.editItem = asyncWrap(async (req, res) => {
+controller.editTodoContent = asyncWrap(async (req, res) => {
   const { todoID, todo } = req.body;
   if (!todoID || !todo) throw new Error('할 일을 수정 할 수 없습니다.');
   try {
@@ -42,6 +44,21 @@ controller.editItem = asyncWrap(async (req, res) => {
     console.error(error);
   }
 });
+
+controller.editPriority = asyncWrap(async (req, res) => {
+  const { todoID, priority } = req.body;
+  if (!todoID || !priority) throw new HttpCodeException(400, 'E400', '할 일의 순서를 변경할 수 없습니다.');
+  try {
+    const targetTodo = await Todos.findById(todoID);
+    // TODO: todoID 는 들어왔지만 DB에 없는 경우 익셉션
+    targetTodo.priority = priority;
+    await targetTodo.save();
+    res.send(targetTodo);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 
 controller.deleteItem = asyncWrap(async (req, res) => {
   const { todoID } = req.body;

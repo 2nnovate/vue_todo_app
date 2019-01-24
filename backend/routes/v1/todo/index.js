@@ -8,7 +8,9 @@ router.post('/item', todoControllers.createItem);
 
 router.get('/all', todoControllers.getAllTodos);
 
-router.patch('/item', todoControllers.editItem);
+router.patch('/content', todoControllers.editTodoContent);
+
+router.patch('/priority', todoControllers.editPriority)
 
 router.delete('/item', todoControllers.deleteItem)
 
