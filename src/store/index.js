@@ -55,7 +55,7 @@ export default new Vuex.Store({
       }
     },
     async editTodo({ commit }, editInfo) {
-      const response = await axios.patch('/v1/todo/item/', editInfo);
+      const response = await axios.patch('/v1/todo/content', editInfo);
       if (response.status === 200) {
         commit('patchTodo', { item: response.data });
       }
@@ -73,6 +73,23 @@ export default new Vuex.Store({
       if (response.status === 200) {
         commit('deleteAll');
       }
+    },
+    async reassignPriority({ commit }, list) {
+      await list.reduce(async (promise, todo, index) => {
+        await promise;
+        await axios.patch('/v1/todo/priority', {
+          todoID: todo.todoID,
+          priority: index + 1,
+        }).catch((error) => {
+          // axios 에서 에러 객체는 err.response.data (api 에서 json 으로 리턴한 경우)
+          const errorMessage = error.response.data.message;
+          throw new Error(errorMessage);
+        });
+      }, Promise.resolve());
+
+      const response = await axios.get('/v1/todo/all');
+
+      commit('updateTodos', { data: response.data });
     },
   },
 });

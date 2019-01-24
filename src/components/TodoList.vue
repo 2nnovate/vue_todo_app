@@ -1,12 +1,15 @@
 <template>
-  <div>
+  <draggable
+    :list="todoList"
+    @end="onDragEnd"
+  >
     <el-row
       :gutter="12"
       v-for="item in todoList"
       :key="item.todoID"
       class="margin-bottom"
     >
-      <el-col :span="24">
+      <el-col :span="24" draggable>
         <el-card shadow="hover" v-if="item.todoID !== editTargetID">
           {{ `${item.priority}. ${item.todo}` }}
           <el-dropdown class="float-right">
@@ -40,11 +43,12 @@
         </el-input>
       </el-col>
     </el-row>
-  </div>
+  </draggable>
 </template>
 
 <script>
 import { mapActions } from 'vuex';
+import draggable from 'vuedraggable';
 
 export default {
   name: 'TodoList',
@@ -54,6 +58,9 @@ export default {
       required: true,
     },
   },
+  components: {
+    draggable,
+  },
   data() {
     return {
       editTargetID: null,
@@ -61,7 +68,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['deleteTodo', 'editTodo']),
+    ...mapActions(['deleteTodo', 'editTodo', 'reassignPriority']),
     changeEditMode(item) {
       this.editTargetID = item.todoID;
       this.editContent = item.todo;
@@ -75,6 +82,17 @@ export default {
       this.editTodo(editInfo);
       this.editTargetID = null;
       this.editContent = null;
+    },
+    async onDragEnd() {
+      const reSorted = this.todoList;
+      try {
+        await this.reassignPriority(reSorted);
+      } catch (error) {
+        this.$notify.error({
+          title: 'Error',
+          message: error.message,
+        });
+      }
     },
   },
   mounted() {},
