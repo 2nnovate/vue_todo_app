@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
 const routes = require('./routes');
+const HttpCodeException = require('./lib/httpcode-exception');
 
 const app = express();
 
@@ -28,14 +29,49 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((err, req, res) => {
+// 전역 에러 핸들러, express 에서 네 개의 파라메터를 가져아만 에러 핸들러로 인식한
+app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  let newError;
+  if (err instanceof HttpCodeException) {
+    newError = {
+      ...err,
+      status: err.httpCode,
+      code: err.errorCode,
+      message: err.errorMessage,
+    };
+  } else if (err instanceof Error) {
+    newError = {
+      ...err,
+      status: err.status || 500,
+      code: err.errorCode || err.code || 'E500',
+      message: err.errorMessage || err.message || '',
+    };
+  } else if (err instanceof Object) {
+    newError = new Error();
+    newError.status = err.status || 500;
+    newError.code = err.errorCode || err.code || 'E500';
+    newError.message = err.errorMessage || err.message || '';
+    newError.data = err.data || {};
+    newError.stack = err.stack;
+  }
+
+  // AJAX 여부에따른 응답형태 변화.
+  if (req.xhr) {
+    return res
+      .status(newError.status)
+      .send(newError);
+  }
+
+  return res
+    .status(newError.status || 500)
+    .json({
+      message: newError.message,
+      error: newError,
+    });
 });
 
 // connect To DB
