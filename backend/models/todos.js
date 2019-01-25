@@ -14,6 +14,11 @@ module.exports = function (sequelize, DataTypes) {
     priority: {
       type: DataTypes.SMALLINT(4),
     },
+    done: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
     deleted: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
