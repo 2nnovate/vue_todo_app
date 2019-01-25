@@ -10,7 +10,9 @@ router.get('/all', todoControllers.getAllTodos);
 
 router.patch('/content', todoControllers.editTodoContent);
 
-router.patch('/priority', todoControllers.editPriority)
+router.patch('/priority', todoControllers.editPriority);
+
+router.patch('/status', todoControllers.toggleStatus);
 
 router.delete('/item', todoControllers.deleteItem)
 

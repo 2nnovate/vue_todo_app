@@ -10,8 +10,12 @@
       class="margin-bottom"
     >
       <el-col :span="24" draggable>
-        <el-card shadow="hover" v-if="item.todoID !== editTargetID">
-          {{ `${item.priority}. ${item.todo}` }}
+        <el-card
+          shadow="hover"
+          v-if="item.todoID !== editTargetID"
+          :class="item.done ? 'done' : ''"
+        >
+          {{ item.priority ? `${item.priority}. ${item.todo}` : item.todo }}
           <el-dropdown class="float-right">
             <span class="el-dropdown-link">
               더보기<i class="el-icon-arrow-down el-icon--right"></i>
@@ -20,6 +24,10 @@
               <el-dropdown-item
               @click.native="changeEditMode(item)">
                 수정
+              </el-dropdown-item>
+              <el-dropdown-item
+                @click.native="ontoggleStatus(item)">
+                {{ item.done ? '완료취소' : '완료' }}
               </el-dropdown-item>
               <el-dropdown-item
                 @click.native="deleteTodo(item.todoID)">
@@ -68,10 +76,20 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['deleteTodo', 'editTodo', 'reassignPriority']),
+    ...mapActions(['deleteTodo', 'editTodo', 'reassignPriority', 'toggleStatus']),
     changeEditMode(item) {
       this.editTargetID = item.todoID;
       this.editContent = item.todo;
+    },
+    async ontoggleStatus(item) {
+      try {
+        await this.toggleStatus(item);
+      } catch (error) {
+        this.$notify.error({
+          title: 'Error',
+          message: error.message,
+        });
+      }
     },
     editConfirm() {
       if (!this.editTargetID) return;
@@ -95,14 +113,19 @@ export default {
       }
     },
   },
-  mounted() {},
+  mounted() {
+    console.log('[this.todoList]', this.todoList);
+    this.$nextTick(() => {
+      console.log('[this.todoList]', this.todoList);
+    });
+  },
 };
 </script>
 
-<style lang="scss" scoped>
-  .el-card {
-    &__body {
-      padding: 14px !important;
+<style lang="scss">
+  .el-card.done {
+    .el-card__body {
+      text-decoration: line-through;
     }
   }
 </style>

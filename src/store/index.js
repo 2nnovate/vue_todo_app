@@ -60,20 +60,6 @@ export default new Vuex.Store({
         commit('patchTodo', { item: response.data });
       }
     },
-    async deleteTodo({ commit }, todoID) {
-      const response = await axios.delete('/v1/todo/item', { data: { todoID } });
-      if (response.status === 200) {
-        const updatedTodosResponse = await axios.get('/v1/todo/all');
-        commit('updateTodos', { data: updatedTodosResponse.data });
-      }
-    },
-    async deleteAll({ commit }) {
-      const response = await axios.delete('/v1/todo/all');
-      console.log('[response.data.message]', response.data.message);
-      if (response.status === 200) {
-        commit('deleteAll');
-      }
-    },
     async reassignPriority({ commit }, list) {
       await list.reduce(async (promise, todo, index) => {
         await promise;
@@ -90,6 +76,32 @@ export default new Vuex.Store({
       const response = await axios.get('/v1/todo/all');
 
       commit('updateTodos', { data: response.data });
+    },
+    async toggleStatus({ commit }, editInfo) {
+      const { todoID, done } = editInfo;
+      const response = await axios.patch('/v1/todo/status', {
+        todoID,
+        status: !done,
+      }).catch((error) => {
+        const errorMessage = error.response.data.message;
+        throw new Error(errorMessage);
+      });
+      console.log('[response.data]', response.data);
+      commit('updateTodos', { data: response.data });
+    },
+    async deleteTodo({ commit }, todoID) {
+      const response = await axios.delete('/v1/todo/item', { data: { todoID } });
+      if (response.status === 200) {
+        const updatedTodosResponse = await axios.get('/v1/todo/all');
+        commit('updateTodos', { data: updatedTodosResponse.data });
+      }
+    },
+    async deleteAll({ commit }) {
+      const response = await axios.delete('/v1/todo/all');
+      console.log('[response.data.message]', response.data.message);
+      if (response.status === 200) {
+        commit('deleteAll');
+      }
     },
   },
 });
