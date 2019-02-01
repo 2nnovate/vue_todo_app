@@ -43,17 +43,21 @@ export default new Vuex.Store({
       const response = await axios.get('/v1/todo/all');
       commit('updateTodos', { data: response.data });
     },
-    async addTodo({ commit, state }, todo) {
+
+    async addTodo({ commit }, todo) {
       const bodyObject = {
         todo,
         authorID: 1,
-        priority: state.todos.length + 1,
+        priority: 1,
       };
-      const response = await axios.post('/v1/todo/item', bodyObject);
-      if (response.status === 200) {
-        commit('addNewTodo', { item: response.data });
-      }
+      const response = await axios.post('/v1/todo/item', bodyObject)
+        .catch((error) => {
+          const errorMessage = error.response.data.message;
+          throw new Error(errorMessage);
+        });
+      commit('updateTodos', { data: response.data });
     },
+
     async editTodo({ commit }, editInfo) {
       const response = await axios.patch('/v1/todo/content', editInfo);
       if (response.status === 200) {
@@ -86,7 +90,6 @@ export default new Vuex.Store({
         const errorMessage = error.response.data.message;
         throw new Error(errorMessage);
       });
-      console.log('[response.data]', response.data);
       commit('updateTodos', { data: response.data });
     },
     async deleteTodo({ commit }, todoID) {
