@@ -203,20 +203,28 @@ controller.deleteItem = asyncWrap(async (req, res) => {
 
   try {
     await Todos.destroy({ where: { todoID } });
-
-    const allTodos = await getAllList();
-    // TODO: 수정 필요 (트랜젝션 필요 + 우선순위 없는애들만 하기) (완료된 애들이 다시 순서가 생기는 문제있음)
-    await allTodos.reduce(async (promise, todo, index) => {
-      await promise;
-      const item = await Todos.findById(todo.todoID);
-      item.priority = index + 1;
-      await item.save();
-    }, Promise.resolve());
-
-    res.send({ message: '할 일을 삭제하였습니다.' });
   } catch (error) {
     throw new HttpCodeException(500, 'E500', '데이터를 삭제하는데 실패하였습니다.');
   }
+
+  const transaction = await sequelize.transaction();
+  const allTodos = await getAllList();
+  try {
+    await allTodos
+      .filter(item => !item.done)
+      .reduce(async (promise, todo, index) => {
+        await promise;
+        const item = await Todos.findById(todo.todoID);
+        item.priority = index + 1;
+        await item.save({ transaction });
+      }, Promise.resolve());
+  } catch (error) {
+    await transaction.rollback();
+    throw new HttpCodeException(500, 'E500', '삭제하고 남은 할 일들의 상태를 변경하는데 실패하였습니다.');
+  }
+
+  await transaction.commit();
+  res.send({ message: '할 일을 삭제하였습니다.' });
 });
 
 controller.deleteAll = asyncWrap(async (req, res) => {
