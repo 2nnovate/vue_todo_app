@@ -102,7 +102,7 @@ export default {
       this.editContent = null;
     },
     async onDragEnd() {
-      const reSorted = this.todoList;
+      const reSorted = this.todoList.filter(item => !item.done);
       try {
         await this.reassignPriority(reSorted);
       } catch (error) {

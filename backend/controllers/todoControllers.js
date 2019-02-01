@@ -22,7 +22,7 @@ const getAllList = async () => {
 // 리스트를 받아서 우선순위가 있는 것들만 필터링하고, 있는것들의 우선순위를 재정렬
 const reAssignPriorityAndReturnListFromDB = async (list, transaction) => {
   const filteredList = list
-    .filter(item => item.priority)
+    .filter(item => typeof item.priority === 'number')
     .sort((a, b) => {
       if (a.priority > b.priority) {
         return 1;
@@ -151,16 +151,32 @@ controller.toggleStatus = asyncWrap(async (req, res) => {
   if (!targetTodo) {
     throw new HttpCodeException(404, 'E404', '할 일의 상태를 변경할 수 없습니다. (해당 할 일을 찾을 수 없습니다)');
   }
-  const originPriority = targetTodo.priority;
-  try {
-    targetTodo.done = status;
-    targetTodo.priority = null;
-    await targetTodo.save();
-  } catch (error) {
-    targetTodo.done = !status;
-    targetTodo.priority = originPriority;
-    await targetTodo.save();
-    throw new HttpCodeException(500, 'E500', '할 일의 상태를 변경하는데 실패하였습니다.');
+
+  if (status) {
+    // 미완료 -> 완료로 변경하는 경우
+    const originPriority = targetTodo.priority;
+    try {
+      targetTodo.done = status;
+      targetTodo.priority = null;
+      await targetTodo.save();
+    } catch (error) {
+      targetTodo.done = !status;
+      targetTodo.priority = originPriority;
+      await targetTodo.save();
+      throw new HttpCodeException(500, 'E500', '할 일의 상태를 변경하는데 실패하였습니다.');
+    }
+  } else {
+    // 완료 -> 미완료로 변경하는 경우
+    try {
+      targetTodo.done = status;
+      targetTodo.priority = 0;
+      await targetTodo.save();
+    } catch (error) {
+      targetTodo.done = !status;
+      targetTodo.priority = null;
+      await targetTodo.save();
+      throw new HttpCodeException(500, 'E500', '할 일의 상태를 변경하는데 실패하였습니다.');
+    }
   }
 
   const transaction = await sequelize.transaction();
@@ -189,7 +205,7 @@ controller.deleteItem = asyncWrap(async (req, res) => {
     await Todos.destroy({ where: { todoID } });
 
     const allTodos = await getAllList();
-    // TODO: 수정 필요 (트랜젝션 필요)
+    // TODO: 수정 필요 (트랜젝션 필요 + 우선순위 없는애들만 하기) (완료된 애들이 다시 순서가 생기는 문제있음)
     await allTodos.reduce(async (promise, todo, index) => {
       await promise;
       const item = await Todos.findById(todo.todoID);
