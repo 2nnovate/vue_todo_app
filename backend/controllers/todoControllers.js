@@ -58,13 +58,38 @@ controller.createItem = asyncWrap(async (req, res) => {
     throw new HttpCodeException(400, 'E400', '할 일을 생성 할 수 없습니다. (우선순위가 전달되지 않았습니다)');
   }
 
+  const transaction = await sequelize.transaction();
+  const originList = await getAllList();
+
+  if (originList.length) {
+    try {
+      const filteredList = originList.filter(item => item.priority);
+
+      await filteredList.reduce(async (promise, originTodo) => {
+        await promise;
+        const item = await Todos.findById(originTodo.todoID);
+        item.priority += 1;
+        await item.save({ transaction });
+      }, Promise.resolve());
+    } catch (error) {
+      console.error(error);
+      await transaction.rollback();
+      throw new HttpCodeException(500, 'E500', '재정렬에 실패하였습니다.');
+    }
+  }
+
   try {
-    const newItem = await Todos.create({ todo, authorID, priority });
-    res.send(newItem);
+    await Todos.create({ todo, authorID, priority }, { transaction });
   } catch (error) {
     console.error(error);
+    await transaction.rollback();
     throw new HttpCodeException(500, 'E500', '생성에 실패하였습니다.');
   }
+
+  await transaction.commit();
+  const newList = await getAllList();
+
+  res.send(newList);
 });
 
 controller.editTodoContent = asyncWrap(async (req, res) => {
