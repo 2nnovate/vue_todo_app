@@ -16,12 +16,12 @@
     </header>
     <article>
       <el-input
-        placeholder="할 일을 입력해주세요"
         v-model="todoInput"
-        clearable
-        class="margin-bottom"
+        @keypress.enter.native="addTodoClient"
         v-focus
-        @keyup.enter.native="addTodoClient"
+        placeholder="할 일을 입력해주세요"
+        class="margin-bottom"
+        clearable
       >
         <el-button
           slot="append"
@@ -65,9 +65,16 @@ export default {
   },
   methods: {
     ...mapActions(['fetchTodos', 'addTodo', 'deleteAll']),
-    addTodoClient() {
+    async addTodoClient() {
       if (!this.todoInput) return;
-      this.addTodo(this.todoInput);
+      try {
+        await this.addTodo(this.todoInput);
+      } catch (error) {
+        this.$notify.error({
+          title: 'Error',
+          message: error.message,
+        });
+      }
       this.todoInput = '';
     },
     handleDeleteDialogClose() {
